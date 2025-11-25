@@ -44,7 +44,7 @@ public class ClienteDAOTest {
 	public void pesquisarCliente() throws DAOException {
 		Cliente cliente = new Cliente();
 		cliente.setCpf(12312312312L);
-		cliente.setNome("Rodrigo");
+		cliente.setNome("Renan");
 		cliente.setCidade("São Paulo");
 		cliente.setEnd("End");
 		cliente.setEstado("SP");
@@ -60,7 +60,7 @@ public class ClienteDAOTest {
 	public void salvarCliente() throws DAOException {
 		Cliente cliente = new Cliente();
 		cliente.setCpf(56565656565L);
-		cliente.setNome("Rodrigo");
+		cliente.setNome("Renan");
 		cliente.setCidade("São Paulo");
 		cliente.setEnd("End");
 		cliente.setEstado("SP");
@@ -78,7 +78,7 @@ public class ClienteDAOTest {
 	public void excluirCliente() throws DAOException {
 		Cliente cliente = new Cliente();
 		cliente.setCpf(10203040506L);
-		cliente.setNome("Rodrigo");
+		cliente.setNome("Renan");
 		cliente.setCidade("São Paulo");
 		cliente.setEnd("End");
 		cliente.setEstado("SP");
@@ -97,7 +97,7 @@ public class ClienteDAOTest {
 	public void alterarCliente() throws DAOException {
 		Cliente cliente = new Cliente();
 		cliente.setCpf(70809010011L);
-		cliente.setNome("Rodrigo");
+		cliente.setNome("Renan");
 		cliente.setCidade("São Paulo");
 		cliente.setEnd("End");
 		cliente.setEstado("SP");
@@ -111,14 +111,14 @@ public class ClienteDAOTest {
 		
 		Cliente clienteAlterado = clienteDao.buscarPorCPF(retorno.getCpf());
 		assertNotNull(clienteAlterado);
-		assertEquals("Rodrigo Pires", clienteAlterado.getNome());
+		assertEquals("Renan", clienteAlterado.getNome());
 	}
 	
 	@Test
 	public void buscarTodos() throws DAOException {
 		Cliente cliente = new Cliente();
 		cliente.setCpf(22334455667L);
-		cliente.setNome("Rodrigo");
+		cliente.setNome("Renan");
 		cliente.setCidade("São Paulo");
 		cliente.setEnd("End");
 		cliente.setEstado("SP");

@@ -59,10 +59,10 @@ public class ProdutoServiceTest {
 	
 	@Test
 	public void alterarCliente() throws DAOException {
-		produto.setNome("Rodrigo Pires");
+		produto.setNome("Renan Queiroz");
 		Produto retorno = produtoService.alterar(produto);
 		
-		Assert.assertEquals("Rodrigo Pires", retorno.getNome());
+		Assert.assertEquals("Renan Queiroz", retorno.getNome());
 	
 	}
 
