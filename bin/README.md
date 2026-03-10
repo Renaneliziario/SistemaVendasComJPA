@@ -66,5 +66,4 @@ Este projeto vai além de um CRUD básico, implementando conceitos fundamentais 
 
 ---
 **Autor:** Renan Queiroz Eliziario 
-
 *Projeto desenvolvido como parte do aprimoramento em Java e persistência de dados corporativos.*
