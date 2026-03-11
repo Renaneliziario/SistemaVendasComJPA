@@ -335,8 +335,8 @@ Arquivo: `src/resources/java/META-INF/persistence.xml`
 
 ```xml
 <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/vendas_online_2" />
-<property name="javax.persistence.jdbc.user" value="renan" />
-<property name="javax.persistence.jdbc.password" value="admin" />
+<property name="javax.persistence.jdbc.user" value="seuusuario" />
+<property name="javax.persistence.jdbc.password" value="suasenha" />
 <property name="hibernate.hbm2ddl.auto" value="update" />
 ```
 
