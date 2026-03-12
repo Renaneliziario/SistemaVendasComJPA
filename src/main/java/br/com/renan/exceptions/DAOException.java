@@ -7,7 +7,7 @@ package br.com.renan.exceptions;
 @author renan.eliziario
  *
  */
-public class DAOException extends Exception {
+public final class DAOException extends VendasException {
 
 	private static final long serialVersionUID = 7054379063290825137L;
 

@@ -3,7 +3,7 @@
  */
 package br.com.renan.dao;
 
-import javax.persistence.TypedQuery;
+import jakarta.persistence.TypedQuery;
 
 import br.com.renan.dao.generic.GenericDAO;
 import br.com.renan.domain.Cliente;

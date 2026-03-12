@@ -10,7 +10,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.Collection;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,6 +26,7 @@ import br.com.renan.domain.Cliente;
 import br.com.renan.domain.Produto;
 import br.com.renan.domain.Venda;
 import br.com.renan.domain.Venda.Status;
+import br.com.renan.domain.VendaResumo;
 import br.com.renan.exceptions.DAOException;
 import br.com.renan.exceptions.TipoChaveNaoEncontradaException;
 
@@ -276,6 +277,29 @@ public class VendaDAOTest {
 		assertEquals(Status.INICIADA, vendaConsultada2.getStatus());
 	} 
 	
+	@Test
+	public void converterParaResumo() throws TipoChaveNaoEncontradaException, DAOException {
+		// Java 21 — Record: VendaResumo é um DTO imutável gerado a partir de uma Venda
+		Venda venda = criarVenda("A12");
+		vendaDao.cadastrar(venda);
+
+		Venda vendaConsultada = vendaDao.consultar(venda.getId());
+
+		// fromVenda() cria o record com os dados relevantes
+		var resumo = VendaResumo.fromVenda(vendaConsultada);
+
+		// getters são os próprios nomes dos campos do record (sem "get")
+		assertNotNull(resumo);
+		assertEquals("A12", resumo.codigo());
+		assertEquals("Renan", resumo.nomeCliente());
+		assertEquals(Status.INICIADA, resumo.status());
+		assertTrue(resumo.valorTotal().compareTo(BigDecimal.valueOf(20)) == 0);
+		assertEquals(2, resumo.totalProdutos());
+
+		// toString() gerado automaticamente — útil para logs
+		System.out.println("Resumo: " + resumo);
+	}
+
 	@Test
 	public void finalizarVenda() throws TipoChaveNaoEncontradaException, DAOException {
 		String codigoVenda = "A10";

@@ -7,8 +7,7 @@ package br.com.renan.exceptions;
 @author renan.eliziario
  *
  */
-public class TipoElementoNaoConhecidoException extends Exception {
-	
+public final class TipoElementoNaoConhecidoException extends VendasException {
 
 	private static final long serialVersionUID = -2268140970978666251L;
 
@@ -19,5 +18,4 @@ public class TipoElementoNaoConhecidoException extends Exception {
     public TipoElementoNaoConhecidoException(String msg, Throwable e) {
         super(msg, e);
     }
-
 }

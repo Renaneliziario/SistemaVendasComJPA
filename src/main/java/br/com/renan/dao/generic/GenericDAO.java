@@ -2,11 +2,10 @@ package br.com.renan.dao.generic;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 
 import br.com.renan.exceptions.DAOException;
 
@@ -67,7 +66,8 @@ public class GenericDAO<T, E extends Serializable> implements IGenericDAO<T,E> {
     
     @Override
     public Collection<T> buscarTodos() throws DAOException {
-        List<T> list = entityManager.createQuery(
+        // Java 21: var infere o tipo List<T> automaticamente
+        var list = entityManager.createQuery(
                 "SELECT e FROM " + this.persistentClass.getSimpleName() + " e", this.persistentClass)
                 .getResultList();
         return list;

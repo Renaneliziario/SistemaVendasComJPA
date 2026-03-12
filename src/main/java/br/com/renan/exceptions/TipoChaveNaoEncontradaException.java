@@ -3,9 +3,8 @@ package br.com.renan.exceptions;
 /**
 @author renan.eliziario
  */
-public class TipoChaveNaoEncontradaException extends Exception {
+public final class TipoChaveNaoEncontradaException extends VendasException {
 
-    
 	private static final long serialVersionUID = -1389494676398525746L;
 
 	public TipoChaveNaoEncontradaException(String msg) {
