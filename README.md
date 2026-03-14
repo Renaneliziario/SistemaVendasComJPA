@@ -1,65 +1,101 @@
 # SalesPersistence-JPA: Sistema de Gestão de Vendas com JPA/Hibernate
 
-Este projeto é um back-end robusto desenvolvido em Java para o gerenciamento de ecossistemas comerciais (vendas, clientes e produtos). Ele demonstra o domínio técnico sobre **Arquitetura em Camadas**, **Padrões de Projeto (Design Patterns)** e a especificação **JPA (Java Persistence API)** com o provedor **Hibernate**.
+Sistema de **back-end em Java** para gerenciamento robusto de vendas, clientes e produtos. Este projeto demonstra o domínio técnico sobre **arquitetura em camadas**, **padrões de projeto** e **persistência avançada com JPA/Hibernate**.
 
 ---
 
-## 🏗️ Arquitetura do Sistema
+## 🏗️ Arquitetura em Camadas (N-Tier)
 
-O projeto segue uma **arquitetura em 3 camadas**, garantindo a separação de responsabilidades e alta testabilidade:
+O projeto segue uma arquitetura de 3 camadas, garantindo a separação de responsabilidades (SoC):
 
-1.  **Camada de Serviço (Service Layer):** Orquestra a lógica de negócio e as regras do domínio.
-2.  **Camada de Acesso a Dados (DAO):** Isola a persistência utilizando o padrão **Generic DAO** com Java Generics.
-3.  **Camada de Domínio (Entities):** Modelagem rica do negócio utilizando anotações JPA para mapeamento objeto-relacional (ORM).
-
----
-
-## 🛠️ Stack Tecnológica
-
-*   **Java SE 17+:** Versão estável e moderna da linguagem.
-*   **JPA / Hibernate:** Mapeamento objeto-relacional e gestão de persistência.
-*   **PostgreSQL:** Banco de dados relacional para ambiente de produção.
-*   **H2 Database:** Banco de dados em memória utilizado para isolamento total nos testes de integração.
-*   **JUnit 4/5:** Framework para automação de testes unitários e de integração.
-*   **Maven:** Gestão de dependências e automação de build.
-
----
-
-## 🧪 Estratégia de Qualidade
-
-O projeto destaca-se pela sua robusta suíte de testes:
-
-*   **Testes de Integração (DAO):** Validam a persistência real no banco H2, garantindo que as queries e mapeamentos `@Entity` estejam corretos.
-*   **Testes Unitários (Service):** Utilizam **Mocks** para validar a lógica de negócio em isolamento total da infraestrutura.
-*   **Regras de Status:** Testes específicos para garantir o ciclo de vida da venda (`INICIADA` -> `CONCLUIDA` | `CANCELADA`).
+```text
+┌─────────────────────────────────────────────┐
+│              CAMADA DE SERVIÇO              │  ← Regras de negócio
+│   ClienteService  │  ProdutoService         │
+│      (usa IClienteDAO / IProdutoDAO)        │
+└──────────────────────┬──────────────────────┘
+                       │ chama
+┌──────────────────────▼──────────────────────┐
+│               CAMADA DAO                    │  ← Acesso ao banco
+│   ClienteDAO  │  ProdutoDAO  │  VendaDAO    │
+│         (usa EntityManager JPA)             │
+└──────────────────────┬──────────────────────┘
+                       │ persiste
+┌──────────────────────▼──────────────────────┐
+│              CAMADA DE DOMÍNIO              │  ← Dados e regras da entidade
+│  Cliente │ Produto │ Venda │ ProdutoQtd     │
+└─────────────────────────────────────────────┘
+```
 
 ---
 
 ## 🧩 Modelo de Domínio (JPA Entities)
 
-As entidades utilizam anotações avançadas para refletir o banco de dados:
-*   `@OneToMany` com `CascadeType.ALL` para gerenciar itens de venda de forma automática.
-*   `@ManyToOne` com `@JoinColumn` para relacionamentos resilientes.
-*   Uso de `BigDecimal` para garantir precisão absoluta em cálculos financeiros.
+As entidades são mapeadas para o banco de dados relacional através de anotações JPA, utilizando tipos complexos e precisão financeira.
+
+### `Venda` (Agregador Principal)
+Controla o ciclo de vida da venda e o cálculo automático de totais.
+*   **Relacionamento:** `@ManyToOne` com Cliente e `@OneToMany` com Itens de Venda (`ProdutoQuantidade`).
+*   **Enum Status:** Gerencia estados `INICIADA`, `CONCLUIDA` e `CANCELADA`.
+*   **Business Logic:** Métodos internos para `recalcularValorTotalVenda()` e validação de transições de status.
+
+### `Produto` e `Cliente`
+*   Uso de `@Column(unique=true)` para CPFs e Códigos de Produto.
+*   Uso de `BigDecimal` para valores monetários, garantindo precisão absoluta (evitando erros de arredondamento de tipos `double` ou `float`).
+
+---
+
+## 🗄️ Camada DAO (Data Access Object)
+
+### Padrão Generic DAO
+Implementação de CRUD genérico utilizando **Java Generics**, reduzindo a repetição de código (DRY) e padronizando o acesso ao banco:
+```java
+// T = tipo da entidade | E = tipo da chave primária
+public class GenericDAO<T, E extends Serializable> implements IGenericDAO<T, E>
+```
+
+### Consultas Avançadas
+*   Uso de **Criteria API** no `VendaDAO` para realizar `JOIN FETCH`, evitando o problema de performance N+1 e buscando dados relacionados (Cliente e Produtos) em uma única consulta SQL otimizada.
+
+---
+
+## 🧪 Estratégia de Testes Automatizados
+
+O projeto utiliza uma estratégia de testes em duas frentes:
+
+1.  **Testes de Integração (DAO):** Utilizam o banco **H2 em memória** (`create-drop`) para validar o mapeamento ORM e as queries reais sem afetar o banco de produção.
+2.  **Testes Unitários (Service):** Utilizam **Mocks** (através de implementações específicas de teste) para isolar a lógica de negócio e garantir que as regras sejam validadas sem dependência de infraestrutura.
+
+---
+
+## 🛠️ Tecnologias e Ferramentas
+
+| Tecnologia | Finalidade |
+|---|---|
+| **Java 17+** | Linguagem principal e lógica de negócio |
+| **JPA / Hibernate 5.6** | Mapeamento objeto-relacional (ORM) |
+| **PostgreSQL** | Banco de dados em ambiente de produção |
+| **H2 Database** | Banco em memória para ambiente de testes |
+| **JUnit 4.13** | Framework para execução de testes automatizados |
+| **Maven** | Gestão de dependências e automação de build |
 
 ---
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
-*   Java JDK 17+ instalado.
-*   Maven 3+ configurado.
-*   PostgreSQL (opcional, necessário apenas para rodar fora dos testes).
+*   JDK 17 ou superior.
+*   Maven 3.x.
 
 ### Passos
-1.  **Build Completo:** Execute `mvn clean install` para compilar e rodar todos os testes.
-2.  **Executar Testes:** Use `mvn test` para validar as camadas de Service e DAO.
-3.  **Configuração de Produção:** Edite o arquivo `src/main/resources/META-INF/persistence.xml` com suas credenciais do PostgreSQL.
+1.  **Build e Testes:** `mvn clean install` (Isso rodará todos os testes no banco H2 automaticamente).
+2.  **Configuração PostgreSQL:** Para rodar fora dos testes, configure suas credenciais no arquivo `src/main/resources/META-INF/persistence.xml`.
+3.  **Schema do Banco:** O Hibernate está configurado com `hbm2ddl.auto = update`, criando as tabelas automaticamente no primeiro acesso.
 
 ---
 
 ## 📌 Evolução Técnica
-Este projeto representa o quarto estágio da trilha de formação, consolidando o conhecimento de **Frameworks Industriais**. A transição do JDBC nativo para o JPA/Hibernate demonstra a capacidade de lidar com sistemas complexos e escaláveis, preparando o terreno para a arquitetura de Microserviços.
+Este projeto representa o amadurecimento técnico na trilha de Back-End, consolidando o uso de frameworks industriais. Ele serve como base sólida para a transição para arquiteturas modernas de Microserviços e Spring Boot.
 
 ---
 *Desenvolvido por Renan Queiroz Eliziario como parte do portfólio profissional de arquitetura Java.*
