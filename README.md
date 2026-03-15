@@ -1,101 +1,112 @@
-# SalesPersistence-JPA: Sistema de Gestão de Vendas com JPA/Hibernate
+# SalesPersistence-JPA
 
-Sistema de **back-end em Java** para gerenciamento robusto de vendas, clientes e produtos. Este projeto demonstra o domínio técnico sobre **arquitetura em camadas**, **padrões de projeto** e **persistência avançada com JPA/Hibernate**.
+![Java](https://img.shields.io/badge/Java-17%20LTS-ED8B00?style=flat&logo=openjdk&logoColor=white)
+![Hibernate](https://img.shields.io/badge/ORM-Hibernate%20%7C%20JPA-59666C?style=flat&logo=hibernate&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/Prod-PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)
+![H2](https://img.shields.io/badge/Test-H2%20In--memory-0056A0?style=flat)
+![Maven](https://img.shields.io/badge/Build-Maven-C71A36?style=flat&logo=apachemaven&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Concluído-brightgreen?style=flat)
+
+> Sistema de gestão de vendas em Java com **JPA/Hibernate**, arquitetura N-Tier e `GenericDAO` genérico. Demonstra mapeamento ORM avançado, relacionamentos entre entidades, Criteria API com `JOIN FETCH` e estratégia de testes com banco H2 em memória.
+
+> 📐 Quer entender as decisões técnicas e de arquitetura? Veja [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ---
 
-## 🏗️ Arquitetura em Camadas (N-Tier)
+## ✨ Destaques Técnicos
 
-O projeto segue uma arquitetura de 3 camadas, garantindo a separação de responsabilidades (SoC):
+- **`GenericDAO<T, E>` com Java Generics** — CRUD completo reutilizável para qualquer entidade, eliminando código duplicado (princípio DRY)
+- **Criteria API com `JOIN FETCH`** no `VendaDAO` — evita o problema N+1 buscando Cliente e Produtos da Venda em uma única query otimizada
+- **Dois Persistence Units separados** — `sistemaVendas-PU` (PostgreSQL) e `sistemaVendas-Test-PU` (H2) para isolamento total entre produção e testes
+- **`@After` com limpeza de banco** — cada teste roda em ambiente limpo e reproduzível
+- **Mapeamento ORM completo**: `@ManyToOne`, `@OneToMany`, `@Enumerated`, `@SequenceGenerator`
+- **`BigDecimal` para valores monetários** — sem risco de arredondamento de `double`/`float`
 
-```text
+---
+
+## 🏗️ Arquitetura N-Tier
+
+```
 ┌─────────────────────────────────────────────┐
 │              CAMADA DE SERVIÇO              │  ← Regras de negócio
 │   ClienteService  │  ProdutoService         │
-│      (usa IClienteDAO / IProdutoDAO)        │
 └──────────────────────┬──────────────────────┘
-                       │ chama
+                       │ usa interface
 ┌──────────────────────▼──────────────────────┐
 │               CAMADA DAO                    │  ← Acesso ao banco
 │   ClienteDAO  │  ProdutoDAO  │  VendaDAO    │
-│         (usa EntityManager JPA)             │
+│   └── GenericDAO<T, E> (EntityManager JPA)  │
 └──────────────────────┬──────────────────────┘
-                       │ persiste
+                       │ JPA / Hibernate
 ┌──────────────────────▼──────────────────────┐
-│              CAMADA DE DOMÍNIO              │  ← Dados e regras da entidade
-│  Cliente │ Produto │ Venda │ ProdutoQtd     │
+│     PostgreSQL (prod) │ H2 in-memory (test) │
 └─────────────────────────────────────────────┘
 ```
 
----
-
-## 🧩 Modelo de Domínio (JPA Entities)
-
-As entidades são mapeadas para o banco de dados relacional através de anotações JPA, utilizando tipos complexos e precisão financeira.
-
-### `Venda` (Agregador Principal)
-Controla o ciclo de vida da venda e o cálculo automático de totais.
-*   **Relacionamento:** `@ManyToOne` com Cliente e `@OneToMany` com Itens de Venda (`ProdutoQuantidade`).
-*   **Enum Status:** Gerencia estados `INICIADA`, `CONCLUIDA` e `CANCELADA`.
-*   **Business Logic:** Métodos internos para `recalcularValorTotalVenda()` e validação de transições de status.
-
-### `Produto` e `Cliente`
-*   Uso de `@Column(unique=true)` para CPFs e Códigos de Produto.
-*   Uso de `BigDecimal` para valores monetários, garantindo precisão absoluta (evitando erros de arredondamento de tipos `double` ou `float`).
-
----
-
-## 🗄️ Camada DAO (Data Access Object)
-
-### Padrão Generic DAO
-Implementação de CRUD genérico utilizando **Java Generics**, reduzindo a repetição de código (DRY) e padronizando o acesso ao banco:
+### Criteria API no VendaDAO
 ```java
-// T = tipo da entidade | E = tipo da chave primária
-public class GenericDAO<T, E extends Serializable> implements IGenericDAO<T, E>
+// Busca Venda + Cliente + Produtos em uma única query (sem N+1)
+CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+CriteriaQuery<Venda> query = builder.createQuery(Venda.class);
+Root<Venda> root = query.from(Venda.class);
+root.fetch("cliente", JoinType.LEFT);
+root.fetch("produtos", JoinType.LEFT);
+query.select(root).where(builder.equal(root.get("id"), id));
 ```
 
-### Consultas Avançadas
-*   Uso de **Criteria API** no `VendaDAO` para realizar `JOIN FETCH`, evitando o problema de performance N+1 e buscando dados relacionados (Cliente e Produtos) em uma única consulta SQL otimizada.
+---
+
+## 🧪 Estratégia de Testes
+
+| Frente | Banco | Propósito |
+|:---|:---|:---|
+| Testes de DAO | H2 in-memory (create-drop) | Validar mapeamento ORM e queries reais |
+| Testes de Serviço | Mock manual | Validar regras de negócio sem banco |
+
+O `@After` garante que cada teste limpa o banco, tornando a suíte 100% reproduzível e idempotente.
 
 ---
 
-## 🧪 Estratégia de Testes Automatizados
+## 🛠️ Tecnologias
 
-O projeto utiliza uma estratégia de testes em duas frentes:
-
-1.  **Testes de Integração (DAO):** Utilizam o banco **H2 em memória** (`create-drop`) para validar o mapeamento ORM e as queries reais sem afetar o banco de produção.
-2.  **Testes Unitários (Service):** Utilizam **Mocks** (através de implementações específicas de teste) para isolar a lógica de negócio e garantir que as regras sejam validadas sem dependência de infraestrutura.
-
----
-
-## 🛠️ Tecnologias e Ferramentas
-
-| Tecnologia | Finalidade |
-|---|---|
-| **Java 17+** | Linguagem principal e lógica de negócio |
-| **JPA / Hibernate 5.6** | Mapeamento objeto-relacional (ORM) |
-| **PostgreSQL** | Banco de dados em ambiente de produção |
-| **H2 Database** | Banco em memória para ambiente de testes |
-| **JUnit 4.13** | Framework para execução de testes automatizados |
-| **Maven** | Gestão de dependências e automação de build |
+| Tecnologia | Versão | Uso |
+|:---|:---|:---|
+| Java | 17 LTS | Linguagem principal |
+| JPA / Hibernate | Jakarta EE | Mapeamento ORM |
+| PostgreSQL | latest | Banco de produção |
+| H2 Database | latest | Banco de testes em memória |
+| JUnit | 4.13 | Framework de testes |
+| Maven | 3.x | Build e dependências |
 
 ---
 
 ## 🚀 Como Executar
 
-### Pré-requisitos
-*   JDK 17 ou superior.
-*   Maven 3.x.
+**Pré-requisitos:** JDK 17+, Maven 3+, Docker
 
-### Passos
-1.  **Build e Testes:** `mvn clean install` (Isso rodará todos os testes no banco H2 automaticamente).
-2.  **Configuração PostgreSQL:** Para rodar fora dos testes, configure suas credenciais no arquivo `src/main/resources/META-INF/persistence.xml`.
-3.  **Schema do Banco:** O Hibernate está configurado com `hbm2ddl.auto = update`, criando as tabelas automaticamente no primeiro acesso.
+```bash
+# 1. Suba o PostgreSQL e pgAdmin via Docker Compose
+docker-compose up -d
+
+# Rodar os testes (usa H2 automaticamente — sem configuração externa):
+mvn clean test
+
+# Para rodar com PostgreSQL (produção):
+# Configure src/main/resources/META-INF/persistence.xml com suas credenciais
+# O Hibernate cria as tabelas automaticamente (hbm2ddl.auto=update)
+```
 
 ---
 
-## 📌 Evolução Técnica
-Este projeto representa o amadurecimento técnico na trilha de Back-End, consolidando o uso de frameworks industriais. Ele serve como base sólida para a transição para arquiteturas modernas de Microserviços e Spring Boot.
+## 📌 Contexto no Portfólio
+
+Este é o **projeto 4 de 5** da trilha de evolução técnica:
+
+`UserControl (POO)` → `QualityGuard (Testes)` → `SalesSystem-JDBC` → **`SalesPersistence-JPA`** → `Sales-Microservices`
+
+> *A evolução do JDBC para JPA demonstra a compreensão do trade-off: JPA aumenta produtividade, mas esconde complexidades que o projeto anterior explorou explicitamente.*
 
 ---
-*Desenvolvido por Renan Queiroz Eliziario como parte do portfólio profissional de arquitetura Java.*
+
+*Desenvolvido por [Renan Queiroz Eliziario](https://www.linkedin.com/in/renaneliziario/) · [Portfólio completo no GitHub](https://github.com/Renaneliziario)*
+
